@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="MiniEventMain.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TShock" Version="5.1.3" />
+    <PackageReference Include="OTAPI.Upcoming" Version="3.1.20" />
+    <PackageReference Include="TSAPI" Version="5.1.3" />
+    <Content Include="Configuration.cs" />
+  </ItemGroup>
+</Project>

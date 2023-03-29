@@ -1,0 +1,13 @@
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\bin\Debug\net6.0\HttpServer.dll
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\bin\Debug\net6.0\MiniEvent.deps.json
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\bin\Debug\net6.0\MiniEvent.dll
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\bin\Debug\net6.0\MiniEvent.pdb
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.csproj.AssemblyReference.cache
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.AssemblyInfoInputs.cache
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.AssemblyInfo.cs
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.csproj.CoreCompileInputs.cache
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.dll
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\refint\MiniEvent.dll
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\MiniEvent.pdb
+C:\Users\jgran\Documents\PROJECTS\MiniEvent\obj\Debug\net6.0\ref\MiniEvent.dll
