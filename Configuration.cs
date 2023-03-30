@@ -35,9 +35,9 @@ namespace MiniEvent
             File.WriteAllText(path, json);
         }
 
-        public static void Reload(string path, ref Config config)
+        public static void Reload(string path)
         {
-            config = Config.Read(path);
+            Config.Read(path);
             TShock.Log.ConsoleInfo($"Reloaded config file at {path}");
         }
     }

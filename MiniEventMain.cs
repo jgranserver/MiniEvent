@@ -1,4 +1,7 @@
-﻿using System.Xml.Serialization;
+﻿using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
+using Microsoft.VisualBasic.CompilerServices;
+using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Xml.Xsl;
 using System.IO;
@@ -20,10 +23,7 @@ namespace MiniEvent
         private TSPlayer _owner;
         private DateTime _lastEventTriggeredTime = DateTime.MinValue;
         private TimeSpan triggerElapse;
-
         string configPath = Path.Combine(TShock.SavePath, "minieventconfig.json");
-
-        private Config config = new Config();
         public override string Name => "MiniEvent";
         public override string Author => "jgranserver";
         public override string Description => "A mini event plugin. Killing the Traveling Merchant!";
@@ -44,6 +44,7 @@ namespace MiniEvent
 
         private void OnInitialize(EventArgs args)
         {
+            Commands.ChatCommands.Add(new Command("minievent", MiniEventCommand, "event"));
         }
 
         private void OnServerJoin(PlayerPostLoginEventArgs args)
@@ -109,7 +110,13 @@ namespace MiniEvent
                 return;
             }
 
-            if (npc.netID == NPCID.TravellingMerchant)
+            Config config = new Config();
+
+            var rewardItem = config.RewardItem;
+            var rewardStack = config.RewardStack;
+            var eventNPC = config.TargetNPC;
+
+            if (npc.netID == eventNPC)
             {
                 if (DateTime.UtcNow - _lastEventTriggeredTime <= triggerElapse)
                 {
@@ -117,11 +124,7 @@ namespace MiniEvent
                     player.SendInfoMessage($"Next npc hunt will be available in {timeLeft.Minutes} minute/s.");
                     return;
                 }
-                else
-                {
-                    _isActive = true;
-                }
-                player.GiveItem(ItemID.LifeCrystal, 3);
+                player.GiveItem(rewardItem, rewardStack);
                 player.SendInfoMessage($"You have won from the event!");
                 TShock.Utils.Broadcast($"{player.Name} won the event!", Color.LightGreen);
                 _lastEventTriggeredTime = DateTime.Now;
@@ -129,7 +132,104 @@ namespace MiniEvent
             }
         }
 
+        public void MiniEventCommand(CommandArgs args)
+        {
+            var player = args.Player;
+            var cmd = args.Parameters;
 
+            Config config = new Config();
+
+            if (!(player != null || player.IsLoggedIn))
+            {
+                return;
+            }
+
+            if (cmd.Count <= 0)
+            {
+                if (player.Group.HasPermission("minievent.update"))
+                {
+                    player.SendErrorMessage("Invalid command: /event update <targetnpc> <rewarditem> <reward amount>");
+                }
+                player.SendErrorMessage("Invalid command: /event status");
+                return;
+            }
+
+            if (cmd.Count >= 1 || cmd.Count <= 4)
+            {
+                switch (cmd[0])
+                {
+                    case "status":
+
+                        var npcName = TShock.Utils.GetNPCById((int)config.TargetNPC);
+                        var itemName = TShock.Utils.GetItemById((int)config.RewardItem);
+                        if (_owner.Active && _isActive)
+                        {
+                            player.SendInfoMessage("Event status: Active");
+                            player.SendInfoMessage($"Target NPC: {npcName.TypeName}");
+                            player.SendInfoMessage($"Reward: {config.RewardStack} x {itemName.Name}");
+                        }
+                        break;
+
+                    case "update":
+
+                        if (cmd[0].Length == 0)
+                        {
+                            args.Player.SendErrorMessage("Invalid command.");
+                            return;
+                        }
+
+                        var npcs = TShock.Utils.GetNPCByIdOrName(cmd[1]);
+
+                        if (npcs.Count == 0)
+                        {
+                            args.Player.SendErrorMessage("Invalid mob type!");
+                        }
+                        else if (npcs.Count > 1)
+                        {
+                            args.Player.SendMultipleMatchError(npcs.Select(n => $"{n.FullName}({n.type})"));
+                        }
+                        else
+                        {
+                            var npc = npcs[0];
+
+                            if (npc.type >= 1 && npc.type < Terraria.ID.NPCID.Count)
+                            {
+                                config.TargetNPC = (short)npc.netID;
+                            }
+                        }
+
+                        Item item;
+                        List<Item> matchedItems = TShock.Utils.GetItemByIdOrName(cmd[2]);
+
+                        if (matchedItems.Count == 0)
+                        {
+                            player.SendErrorMessage("Invalid item type!");
+                            return;
+                        }
+                        else if (matchedItems.Count > 1)
+                        {
+                            player.SendMultipleMatchError(matchedItems.Select(i => $"{i.Name}({i.netID})"));
+                            return;
+                        }
+                        else
+                        {
+                            item = matchedItems[0];
+                            config.RewardItem = (short)item.netID;
+                        }
+
+                        if (!(cmd[2].Length == 0))
+                        {
+                            config.RewardStack = int.Parse(cmd[3]);
+                        }
+                        else
+                        {
+                            player.SendErrorMessage("Specify the amount for the reward int the 3rd parameter.");
+                        }
+                        break;
+                }
+            }
+            Config.Reload(configPath);
+        }
 
         protected override void Dispose(bool disposing)
         {
