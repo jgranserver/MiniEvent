@@ -12,5 +12,6 @@
     <PackageReference Include="OTAPI.Upcoming" Version="3.1.20" />
     <PackageReference Include="TSAPI" Version="5.1.3" />
     <Content Include="Configuration.cs" />
+    <Content Include="README.md" />
   </ItemGroup>
 </Project>

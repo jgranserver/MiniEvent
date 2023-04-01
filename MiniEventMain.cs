@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Linq;
+using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using Microsoft.VisualBasic.CompilerServices;
 using System.Xml.Serialization;
@@ -23,7 +24,9 @@ namespace MiniEvent
         private TSPlayer _owner;
         private DateTime _lastEventTriggeredTime = DateTime.MinValue;
         private TimeSpan triggerElapse;
-        string configPath = Path.Combine(TShock.SavePath, "minieventconfig.json");
+        static string configPath = Path.Combine(TShock.SavePath, "minieventconfig.json");
+        Config config = Config.Read(configPath);
+
         public override string Name => "MiniEvent";
         public override string Author => "jgranserver";
         public override string Description => "A mini event plugin. Killing the Traveling Merchant!";
@@ -40,6 +43,7 @@ namespace MiniEvent
             ServerApi.Hooks.NetSendData.Register(this, NpcKill);
             TShockAPI.Hooks.PlayerHooks.PlayerPostLogin += OnServerJoin;
             TShockAPI.Hooks.PlayerHooks.PlayerLogout += OnServerLeave;
+
         }
 
         private void OnInitialize(EventArgs args)
@@ -110,8 +114,6 @@ namespace MiniEvent
                 return;
             }
 
-            Config config = new Config();
-
             var rewardItem = config.RewardItem;
             var rewardStack = config.RewardStack;
             var eventNPC = config.TargetNPC;
@@ -125,10 +127,9 @@ namespace MiniEvent
                     return;
                 }
                 player.GiveItem(rewardItem, rewardStack);
-                player.SendInfoMessage($"You have won from the event!");
-                TShock.Utils.Broadcast($"{player.Name} won the event!", Color.LightGreen);
+                TShock.Utils.Broadcast($"{player.Name} won {rewardStack} x {TShock.Utils.GetItemById(rewardItem).Name} from the event!", Color.LightGreen);
+                TShock.Utils.Broadcast($"From killing {config.TargetNPC}!", Color.LightGreen);
                 _lastEventTriggeredTime = DateTime.Now;
-                _isActive = false;
             }
         }
 
@@ -136,8 +137,6 @@ namespace MiniEvent
         {
             var player = args.Player;
             var cmd = args.Parameters;
-
-            Config config = new Config();
 
             if (!(player != null || player.IsLoggedIn))
             {
@@ -148,7 +147,8 @@ namespace MiniEvent
             {
                 if (player.Group.HasPermission("minievent.update"))
                 {
-                    player.SendErrorMessage("Invalid command: /event update <targetnpc> <rewarditem> <reward amount>");
+                    player.SendErrorMessage("To update event configuration: /event update <targetnpc> <rewarditem> <reward amount>");
+                    player.SendErrorMessage("To reload configuration: /event reload");
                 }
                 player.SendErrorMessage("Invalid command: /event status");
                 return;
@@ -167,6 +167,10 @@ namespace MiniEvent
                             player.SendInfoMessage("Event status: Active");
                             player.SendInfoMessage($"Target NPC: {npcName.TypeName}");
                             player.SendInfoMessage($"Reward: {config.RewardStack} x {itemName.Name}");
+                        }
+                        else
+                        {
+                            player.SendInfoMessage("Event status: No event Active");
                         }
                         break;
 
@@ -225,10 +229,16 @@ namespace MiniEvent
                         {
                             player.SendErrorMessage("Specify the amount for the reward int the 3rd parameter.");
                         }
+
+                        Config.Write(configPath, config);
+
+                        break;
+
+                    case "reload":
+                        Config.Reload(configPath, ref config);
                         break;
                 }
             }
-            Config.Reload(configPath);
         }
 
         protected override void Dispose(bool disposing)
