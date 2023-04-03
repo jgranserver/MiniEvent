@@ -1,19 +1,10 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
-using System.Runtime.InteropServices;
-using Microsoft.VisualBasic.CompilerServices;
-using System.Xml.Serialization;
-using System.ComponentModel;
-using System.Xml.Xsl;
-using System.IO;
-using System;
-using TShockAPI;
+﻿using TShockAPI;
 using Terraria;
 using TerrariaApi.Server;
 using Microsoft.Xna.Framework;
 using TShockAPI.Hooks;
-using Terraria.ID;
-using System.Timers;
+using Terraria.Net;
+using Terraria.Localization;
 
 namespace MiniEvent
 {
@@ -43,7 +34,7 @@ namespace MiniEvent
             ServerApi.Hooks.NetSendData.Register(this, NpcKill);
             TShockAPI.Hooks.PlayerHooks.PlayerPostLogin += OnServerJoin;
             TShockAPI.Hooks.PlayerHooks.PlayerLogout += OnServerLeave;
-
+            ServerApi.Hooks.GameUpdate.Register(this, OnStatusUpdate);
         }
 
         private void OnInitialize(EventArgs args)
@@ -63,15 +54,21 @@ namespace MiniEvent
             {
                 _owner = player;
 
-                triggerElapse = TimeSpan.FromSeconds(600);
                 TShock.Utils.Broadcast($"{_owner.Name} the owner status is active. A mini event has started!", Color.LightCyan);
                 TShock.Utils.Broadcast("A mini event has started!", Color.LightCyan);
                 _isActive = true;
             }
-            else
-            {
-                return;
-            }
+
+            // string statusActive = $"Event Status: Active \nTarget NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName} \nReward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
+
+            // if (_isActive)
+            // {
+            //     NetMessage.SendData((int)PacketTypes.Status, -1, -1, NetworkText.FromLiteral(statusActive), 255, 100f, 100f, 0);
+            // }
+            // else
+            // {
+            //     EventStatus("Event Status: Inactive");
+            // }
         }
 
         private void OnServerLeave(PlayerLogoutEventArgs args)
@@ -90,6 +87,27 @@ namespace MiniEvent
             else
             {
                 TShock.Utils.Broadcast($"See you {player.Name} and lets play again together!", Color.LightCyan);
+            }
+        }
+
+        private void OnStatusUpdate(EventArgs args)
+        {
+            var player = TSPlayer.All;
+
+            if (player != null && player.Group.Name == "owner")
+            {
+                _isActive = true;
+            }
+
+            string statusActive = $"\n \n \n \n \n \n \n \n \n \n \n \n \n \n \nEvent Status: Active \nTarget NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName} \nReward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
+
+            if (_isActive)
+            {
+                NetMessage.SendData((int)PacketTypes.Status, -1, -1, NetworkText.FromLiteral(statusActive), 255, (BitsByte)0x1);
+            }
+            else
+            {
+                EventStatus("Event Status: Inactive");
             }
         }
 
@@ -120,17 +138,30 @@ namespace MiniEvent
 
             if (npc.netID == eventNPC)
             {
+                triggerElapse = TimeSpan.FromMinutes(600);
                 if (DateTime.UtcNow - _lastEventTriggeredTime <= triggerElapse)
                 {
-                    var timeLeft = DateTime.UtcNow.Subtract(_lastEventTriggeredTime);
+                    var timeLeft = DateTime.UtcNow - _lastEventTriggeredTime;
                     player.SendInfoMessage($"Next npc hunt will be available in {timeLeft.Minutes} minute/s.");
                     return;
                 }
                 player.GiveItem(rewardItem, rewardStack);
                 TShock.Utils.Broadcast($"{player.Name} won {rewardStack} x {TShock.Utils.GetItemById(rewardItem).Name} from the event!", Color.LightGreen);
-                TShock.Utils.Broadcast($"From killing {config.TargetNPC}!", Color.LightGreen);
+                TShock.Utils.Broadcast($"From killing {TShock.Utils.GetNPCById(config.TargetNPC).TypeName}!", Color.LightGreen);
                 _lastEventTriggeredTime = DateTime.Now;
             }
+
+            // var data = args.MsgId;
+            // string statusActive = "Event Status: Active";
+            // string statusTarget = $"Target NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName}";
+            // string statusReward = $"Reward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
+
+            // if(data == PacketTypes.Status)
+            // {
+            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusActive));
+            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusTarget));
+            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusReward));
+            // }
         }
 
         public void MiniEventCommand(CommandArgs args)
@@ -249,8 +280,15 @@ namespace MiniEvent
                 ServerApi.Hooks.NetSendData.Deregister(this, NpcKill);
                 TShockAPI.Hooks.PlayerHooks.PlayerPostLogin -= OnServerJoin;
                 TShockAPI.Hooks.PlayerHooks.PlayerLogout -= OnServerLeave;
+                ServerApi.Hooks.GameUpdate.Deregister(this, OnStatusUpdate);
+
             }
             base.Dispose(disposing);
+        }
+
+        public void EventStatus(string statusText)
+        {
+            NetMessage.SendData(9, -1, -1, NetworkText.FromLiteral(statusText));
         }
     }
 }
