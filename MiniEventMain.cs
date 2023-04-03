@@ -58,17 +58,6 @@ namespace MiniEvent
                 TShock.Utils.Broadcast("A mini event has started!", Color.LightCyan);
                 _isActive = true;
             }
-
-            // string statusActive = $"Event Status: Active \nTarget NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName} \nReward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
-
-            // if (_isActive)
-            // {
-            //     NetMessage.SendData((int)PacketTypes.Status, -1, -1, NetworkText.FromLiteral(statusActive), 255, 100f, 100f, 0);
-            // }
-            // else
-            // {
-            //     EventStatus("Event Status: Inactive");
-            // }
         }
 
         private void OnServerLeave(PlayerLogoutEventArgs args)
@@ -100,6 +89,7 @@ namespace MiniEvent
             }
 
             string statusActive = $"\n \n \n \n \n \n \n \n \n \n \n \n \n \n \nEvent Status: Active \nTarget NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName} \nReward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
+            string statusInactive = $"\n \n \n \n \n \n \n \n \n \n \n \n \n \n \nEvent Status: InActive";
 
             if (_isActive)
             {
@@ -107,7 +97,7 @@ namespace MiniEvent
             }
             else
             {
-                EventStatus("Event Status: Inactive");
+                NetMessage.SendData((int)PacketTypes.Status, -1, -1, NetworkText.FromLiteral(statusInactive), 255, (BitsByte)0x1);
             }
         }
 
@@ -150,18 +140,6 @@ namespace MiniEvent
                 TShock.Utils.Broadcast($"From killing {TShock.Utils.GetNPCById(config.TargetNPC).TypeName}!", Color.LightGreen);
                 _lastEventTriggeredTime = DateTime.Now;
             }
-
-            // var data = args.MsgId;
-            // string statusActive = "Event Status: Active";
-            // string statusTarget = $"Target NPC: {TShock.Utils.GetNPCById(config.TargetNPC).TypeName}";
-            // string statusReward = $"Reward: {config.RewardStack} x {TShock.Utils.GetItemById(config.RewardItem).Name}";
-
-            // if(data == PacketTypes.Status)
-            // {
-            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusActive));
-            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusTarget));
-            //     NetMessage.SendData((int)data, -1, -1, NetworkText.FromLiteral(statusReward));
-            // }
         }
 
         public void MiniEventCommand(CommandArgs args)
@@ -284,11 +262,6 @@ namespace MiniEvent
 
             }
             base.Dispose(disposing);
-        }
-
-        public void EventStatus(string statusText)
-        {
-            NetMessage.SendData(9, -1, -1, NetworkText.FromLiteral(statusText));
         }
     }
 }
